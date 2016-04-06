@@ -3,7 +3,7 @@
 namespace App\Listeners\Listeners\User;
 
 use App\Events\Events\User\UserCreated;
-use App\Libs\Json\Creators\Creators\UserJsonCreator;
+use App\Libs\Json\Creators\Creators\User\UserJsonCreator;
 use App\Listeners\Interfaces\ListenerInterface;
 use App\Listeners\Listeners\Listener;
 use App\Repositories\Repositories\Sql\UsersJsonRepository;
@@ -27,12 +27,12 @@ class CreateUserJsonDocument extends Listener implements ListenerInterface
      * Handle the event.
      *
      * @param  UserCreated  $event
-     * @return void
+     * @return bool
      */
     public function handle(UserCreated $event)
     {
         $userJsonCreator = new UserJsonCreator($event->user);
         $userJson = $userJsonCreator->create();
-        $this->usersJsonRepository->store($event->user->id, $userJson);
+        return $this->usersJsonRepository->store($userJson);
     }
 }

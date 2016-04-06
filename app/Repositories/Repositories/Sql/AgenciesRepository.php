@@ -8,34 +8,37 @@
 
 namespace App\Repositories\Repositories\Sql;
 
-use App\Models\Sql\Agency;
+use App\DB\Providers\SQL\Factories\Factories\Agency\AgencyFactory;
+use App\DB\Providers\SQL\Models\Agency;
 use App\Repositories\Interfaces\Repositories\AgenciesRepoInterface;
 use Illuminate\Foundation\Auth\User;
 
 class AgenciesRepository extends SqlRepository implements AgenciesRepoInterface
 {
+    private $factory = null;
     public function __construct(){
-
+        $this->factory = new AgencyFactory();
     }
 
-    public function getFirst(array $where)
+    public function getById($id)
     {
-        return (object)[
-            'agency'=>'jr property',
-            'email' => 'nomantufail100@gmail.com'
-        ];
+        return $this->factory->find($id);
     }
 
-    public function updateAgency($user)
+    /**
+     * @param int $userId
+     * @description: function will return all the agencies
+     * of specified userId.
+     * @return array Agency::class
+     */
+    public function getByUser($userId)
     {
-        return true;
+        return $this->factory->getByUser($userId);
     }
 
     public function storeAgency($agencyInfo, $userId)
     {
-        $agencyInfo['user_id'] = $userId;
-        $agency = Agency::create($agencyInfo);
-        return ($agency == null)?null:$agency->id;
+
     }
 
 }

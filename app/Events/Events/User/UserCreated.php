@@ -3,7 +3,7 @@
 namespace App\Events\Events\User;
 
 use App\Events\Events\Event;
-use App\Models\Sql\User;
+use App\DB\Providers\SQL\Models\User;
 use App\Repositories\Repositories\Sql\UsersRepository;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -12,6 +12,10 @@ class UserCreated extends Event
 {
     use SerializesModels;
 
+
+    /**
+     * @var $user User
+     */
     public $user = null;
     /**
      * @param User $user

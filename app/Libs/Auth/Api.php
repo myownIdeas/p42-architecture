@@ -9,8 +9,10 @@
 namespace App\Libs\Auth;
 
 
+use App\Events\Events\User\UserBasicInfoUpdated;
 use App\Libs\Auth\Traits\TokenGenerator;
-use App\Models\Sql\User;
+use App\DB\Providers\SQL\Models\User;
+use Illuminate\Support\Facades\Event;
 
 class Api extends Authenticate implements AuthInterface
 {
@@ -22,12 +24,15 @@ class Api extends Authenticate implements AuthInterface
         parent::__construct();
     }
 
-    public function login(array $credentials){
-        $this->setAccessToken($this->generateToken($credentials));
-        $authenticatedUser = $this->users->getFirst($credentials);
-        $authenticatedUser->access_token = $this->getAccessToken();
-        if(!$this->users->update($authenticatedUser->id, ['access_token'=> $authenticatedUser->access_token]))
-            return false;
+
+    /**
+     * @param User $authenticatedUser
+     * @return User
+     */
+    public function login(User $authenticatedUser){
+        $authenticatedUser->access_token = $this->generateToken($authenticatedUser->id);
+        $this->users->update($authenticatedUser);
+        //Event::fire(new UserBasicInfoUpdated($authenticatedUser));
         return $authenticatedUser;
     }
 

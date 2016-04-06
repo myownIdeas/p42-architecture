@@ -9,47 +9,53 @@
 namespace App\Repositories\Repositories\Sql;
 
 
+use App\DB\Providers\SQL\Factories\Factories\UserJson\UserJsonFactory;
 use App\Events\Events\User\UserCreated;
+use App\Libs\Json\Prototypes\Prototypes\User\UserJsonPrototype;
+use App\Models\Sql\UserDocument;
 use App\Models\Sql\UserJson;
+use App\Repositories\Interfaces\Repositories\UsersJsonRepoInterface;
 use App\Repositories\Interfaces\Repositories\UsersRepoInterface;
 use App\Models\Sql\User;
 use App\Repositories\Transformers\Sql\UserJsonTransformer;
-use App\Repositories\Transformers\Sql\UserTransformer;
 use Illuminate\Support\Facades\Event;
 
-class UsersJsonRepository extends SqlRepository implements UsersRepoInterface
+class UsersJsonRepository extends SqlRepository implements UsersJsonRepoInterface
 {
     private $userJsonTransformer;
+    private $factory = null;
     public function __construct(){
         $this->userJsonTransformer = new UserJsonTransformer();
+        $this->factory = new UserJsonFactory();
     }
 
-    public function getFirst(array $where = [])
+    public function all()
     {
-        $userJson = UserJson::where($where)->get()->first();
-        return $this->userJsonTransformer->transform($userJson);
+
     }
 
-    public function update($userJson)
+    public function search()
     {
-        return true;
+
     }
 
-    public function store($userId, $userJson)
+    public function find($id)
     {
-        $userJson = UserJson::create(['user_id' => $userId, 'json'=>$userJson]);
-        return ($userJson == null)?null:$userJson->id;
+
     }
 
-    public function deleteUser($userId)
+    public function store(UserJsonPrototype $user)
     {
-        User::destroy($userId);
-        return true;
+        return $this->factory->store($user);
     }
 
-    public function getUserDocument($userId)
+    public function update($user)
     {
-        $user = User::where('id','=',$userId)->with('document')->get()->first();
-        return ($user->document == null)?null:$this->userTransformer->transform($user->document->decode());
+
+    }
+
+    public function delete($id)
+    {
+
     }
 }

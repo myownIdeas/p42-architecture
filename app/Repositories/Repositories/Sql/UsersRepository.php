@@ -9,79 +9,96 @@
 namespace App\Repositories\Repositories\Sql;
 
 
+use App\Collections\Collections\UserCollection;
+use App\DB\Providers\SQL\Factories\Factories\User\UserFactory;
+use App\DB\Providers\SQL\SQLFactoryProvider;
 use App\Events\Events\User\UserCreated;
 use App\Libs\Json\Creators\Creators\UserJsonCreator;
 use App\Repositories\Interfaces\Repositories\UsersRepoInterface;
-use App\Models\Sql\User;
+use App\DB\Providers\SQL\Models\User;
 use App\Repositories\Transformers\Sql\UserTransformer;
 use Illuminate\Support\Facades\Event;
 
 class UsersRepository extends SqlRepository implements UsersRepoInterface
 {
     private $userTransformer;
-    private $users = null;
+    private $factory = null;
     public function __construct(){
         $this->userTransformer = new UserTransformer();
-        $this->users = new User();
+        $this->factory = SQLFactoryProvider::user();
     }
 
-    public function getFirst(array $where = [])
+    public function getWithRelations(array $where = [])
     {
-        $user = $this->users->where($where)->with('document')->get()->first();
-        if($user == null || $user->document == null)
-            return null;
-
-        return ($user->document->json == null)?null:$this->userTransformer->transform($user->document->decode());
-    }
-
-    public function getById($id)
-    {
-        return $this->getFirst(['id'=>$id]);
-    }
-
-    public function getByToken($token)
-    {
-        return $this->getFirst(['access_token'=>$token]);
-    }
-
-    public function all()
-    {
-        return $this->users->with('country')
+        return  $this->users->where($where)
+                ->with('country')
                 ->with('membershipPlan')
                 ->with('agencies')
                 ->get();
     }
-    public function update($id, $info)
+
+    public function getFirstWithRelations(array $where = [])
     {
-        return $this->users->where('id','=',$id)->update($info);
+        $user = $this->getWithRelations($where)->first();
+        return $this->userTransformer->transform($user);
     }
 
-    public function store($userInfo)
+
+    /**
+     * @param string $column
+     * @param string $value
+     * @return User
+     */
+    public function findBy($column, $value)
     {
-        $user = $this->users->create($userInfo);
-        Event::fire(new UserCreated($this->fetchUserWithRelations($user->id)));
-        return ($user == null)?null:$user->id;
+        return $this->factory->findBy($column, $value);
+    }
+
+    /**
+     * @param string $email
+     * @return User
+     */
+    public function findByEmail($email = "")
+    {
+        return $this->factory->findByEmail($email);
+    }
+
+    public function getById($id)
+    {
+        return $this->factory->find($id);
+    }
+
+    public function getByToken($token)
+    {
+        return $this->factory->findByToken($token);
+    }
+
+    public function getByCredentials(array $credentials)
+    {
+        return $this->factory->findWhere($credentials);
+    }
+
+    public function all()
+    {
+        $users = $this->factory->all();
+        return new UserCollection($users);
+    }
+
+    public function update(User $user)
+    {
+        return $this->factory->update($user);
+    }
+
+    public function store(User $user)
+    {
+        $user->id = $this->factory->store($user);
+        Event::fire(new UserCreated($user));
+        return $user->id;
     }
 
     public function delete($userId)
     {
         $this->users->destroy($userId);
         return true;
-    }
-
-    public function getUserDocument($userId)
-    {
-        $user = $this->users->where('id','=',$userId)->with('document')->get()->first();
-        return ($user->document == null)?null:$this->userTransformer->transform($user->document->decode());
-    }
-
-    public function fetchUserWithRelations($userId)
-    {
-        $user = $this->users->where('id','=', $userId)
-            ->with('country')
-            ->with('membershipPlan')
-            ->with('agencies')
-            ->get()->first();
-        return $user;
     }
 }

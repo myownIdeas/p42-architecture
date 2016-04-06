@@ -9,18 +9,19 @@
 namespace App\Http\Requests\Requests\Auth;
 
 
+use App\DB\Providers\SQL\Models\User;
 use App\Http\Requests\Interfaces\RequestInterface;
 use App\Http\Requests\Request;
 use App\Http\Validators\Validators\UserValidators\AddUserValidator;
-use App\Transformers\Request\AuthenticateUserTransformer;
-use App\Transformers\Request\RegisterUserTransformer;
+use App\Transformers\Request\Auth\AuthenticateUserTransformer;
+use App\Transformers\Request\Auth\RegisterUserTransformer;
 
 class RegistrationRequest extends Request implements RequestInterface{
 
     public $validator = null;
     public function __construct(){
         parent::__construct(new RegisterUserTransformer($this->getOriginalRequest()));
-        $this->validator = new AddUserValidator($this->getOriginalRequest());
+        $this->validator = new AddUserValidator($this);
     }
 
     public function authorize(){
@@ -31,16 +32,19 @@ class RegistrationRequest extends Request implements RequestInterface{
         return $this->validator->validate();
     }
 
-    public function getUserInfo()
+    /**
+     * @return User::class
+     * */
+    public function getUserModel()
     {
-        return [
-            'f_name' => $this->get('f_name'),
-            'l_name' => $this->get('l_name'),
-            'email' => $this->get('email'),
-            'password' => bcrypt($this->get('password')),
-            'country_id' => 1,
-            'membership_plan_id' => 1,
-        ];
+        $user = new User();
+        $user->fName = $this->get('f_name');
+        $user->lName = $this->get('l_name');
+        $user->email = $this->get('email');
+        $user->password = bcrypt($this->get('password'));
+        $user->countryId = 1;
+        $user->membershipPlanId = 1;
+        return $user;
     }
 
     public function getAgencyInfo()

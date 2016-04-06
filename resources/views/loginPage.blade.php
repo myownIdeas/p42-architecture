@@ -10,15 +10,6 @@
                 height: 100%;
             }
 
-            body {
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                display: table;
-                font-weight: 100;
-                font-family: 'Lato';
-            }
-
             .container {
                 text-align: center;
                 display: table-cell;
@@ -36,9 +27,20 @@
         </style>
     </head>
     <body>
+        <div class="background-image">
+        </div>
         <div class="container">
             <div class="content">
-                <div class="title">{{$data['city_name']}}</div>
+                @if(\Session::has('errors'))
+                    @foreach(\Session::get('errors') as $error)
+                        {{$error}}
+                    @endforeach
+                @endif
+                <form method="post" action="{{route('login')}}">
+                    <input type="text" name="email">
+                    <input type="text" name="password">
+                    <input type="submit" name="submit">
+                </form>
             </div>
         </div>
     </body>

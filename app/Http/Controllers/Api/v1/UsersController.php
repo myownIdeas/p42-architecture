@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Repositories\Repositories\Sql\UsersRepository;
+use App\DB\Providers\SQL\SQLFactoryProvider;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Requests\User\AddUserRequest;
 use App\Http\Requests\Requests\User\DeleteUserRequest;
@@ -18,6 +20,9 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class UsersController extends ApiController
 {
     private $userTransformer;
+    /**
+     * @var UsersRepository::class
+     */
     private $users;
     private $agencyRepo;
     public $response;
@@ -37,35 +42,19 @@ class UsersController extends ApiController
     {
         $users = $this->users->all();
         return $this->response->respond(['data'=>[
-            'total' => sizeof($users),
-            'users'=>$users
+            'total' => $users->count(),
+            'users'=>$users->all()
         ]]);
     }
 
     public function store(AddUserRequest $request)
     {
-        $userId = $this->users->store($request->getUserInfo());
 
-        if($userId == null)
-            return $this->response->respondInternalServerError();
-
-        if($request->userIsAgent())
-            if(!$this->storeAgency($request->getAgencyInfo(), $userId))
-                return $this->response->respondInternalServerError();
-
-        return $this->response->respond(['data' => [
-            'user'=>$this->userTransformer->transformDocument($this->users->getUserDocument($userId))
-        ]]);
     }
 
     private function storeAgency(array $agencyInfo, $userId)
     {
-        if(!$this->agencyRepo->storeAgency($agencyInfo, $userId))
-        {
-            $this->users->delete($userId);
-            return false;
-        }
-        return true;
+
     }
 
 }
